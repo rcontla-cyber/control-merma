@@ -1,0 +1,47 @@
+CONTROL DE MERMA v0.7 — PROTOTIPO PWA (Android y iPhone)
+======================================================
+
+IMPORTANTE: NO ESTÁ APROBADO PARA OPERACIÓN GENERAL.
+NO reemplaza Control_Merma.html v0.6 ni Preempaque_Merma.html.
+
+ARCHIVOS A PUBLICAR JUNTOS EN UNA MISMA CARPETA HTTPS:
+index.html, app.js, styles.css, sw.js, manifest.webmanifest, icon-192.png, icon-512.png
+
+USO:
+1. Sube todos los archivos al mismo directorio de un alojamiento web HTTPS
+   compatible con archivos estáticos (por ejemplo Netlify o Cloudflare Pages).
+2. Abre la URL HTTPS desde Chrome Android o Safari en iPhone CON INTERNET.
+3. Ingresa la clave PUBLICABLE de Supabase y las credenciales de Supervisor Prueba.
+4. La primera carga requiere descargar Supabase JS y los catálogos completos.
+5. Instala la app: Android -> menú del navegador -> Instalar aplicación /
+   Agregar a pantalla de inicio. iPhone -> Safari -> Compartir -> Añadir a inicio.
+6. Con internet, confirma que los catálogos y la PWA estén disponibles.
+7. En modo avión, abre la app instalada y guarda UNA CAPTURA DE ENSAYO;
+   verifica que aparezca como pendiente y sobreviva al reinicio de la app.
+8. Vuelve a conectarte, usa Sincronizar y comprueba en Supabase que se
+   registró una sola vez. Marca las pruebas como es_prueba=true con SQL
+   después de verificar su UUID exacto y antes de generar reportes oficiales.
+
+NOTAS Y LIMITACIONES:
+- La aplicación es un prototipo sin pruebas en dispositivos reales por el autor.
+- La función registrar_merma_segura debe existir, con columna e índice único.
+- Se requiere HTTPS para el service worker; file:// no habilita la PWA.
+- El JavaScript de Supabase se precachea desde CDN en la primera instalación;
+  el CDN debe estar disponible al instalar.
+- La sesión offline solo se restaura si existe sesión autenticada en ese
+  navegador; los permisos del usuario solo pueden revalidarse con internet.
+- IndexedDB puede perder datos si el usuario borra datos de sitios, desinstala
+  la app, cambia de teléfono o el sistema operativo evacúa almacenamiento.
+- La cola local no es un respaldo externo. No borres la app con pendientes.
+- No ejecuta sincronización en segundo plano con la app cerrada.
+- La fecha de captura que registra el servidor al sincronizar puede diferir
+  del momento real en que se hizo la captura offline.
+- Los registros pendientes fuera del rango de 7 días se conservarán localmente
+  con error: requieren resolución administrativa.
+- El cierre se bloquea por capturas locales pendientes DEL usuario actual,
+  pero no puede detectar capturas sin sincronizar de otros teléfonos.
+- Las capturas enviadas luego del cierre requieren política de revisión.
+- Las capturas guardadas aquí se envían como OPERATIVAS (es_prueba=false).
+  Usar únicamente Supervisor Prueba; limpiar con SQL tras comprobar ID exacto.
+- No se garantizan datos 100% offline ni idempotencia en concurrencia extrema
+  hasta completar ensayos de carga y recuperación.
