@@ -73,6 +73,7 @@ const $=id=>document.getElementById(id);
 const SUPABASE_URL='https://xckcaakvfwfksqbtkcpy.supabase.co',ZONE='America/Mazatlan';
 let db=null,user=null,profile=null,selected=null,catalogs=null,idb=null,busySync=false,closingDate=null,closingCount=0,view='capture';
 const catalogKey='merma-v07-catalogs',identityKey='merma-v07-last-user',keyKey='merma-v07-public-key';
+const DEFAULT_PUBLISHABLE_KEY='sb_publishable_hscugGACJHut5rcmIXuzag_HNIDbTrz';
 const status=(id,t,mode='')=>{const e=$(id);e.textContent=t;e.className='status '+mode;};
 const err=e=>e?.message||String(e);
 const online=()=>navigator.onLine;
@@ -89,13 +90,13 @@ const put=x=>transaction('readwrite',s=>s.put(x));
 const get=id=>transaction('readonly',s=>s.get(id));
 const forUser=async()=>user?(await getAll()).filter(x=>x.userId===user.id):[];
 function refreshConnection(){t($('conectividad'),online()?'● Conexión disponible':'● Sin conexión');$('conectividad').style.color=online()?'#187359':'#a16311'}
-function initClient(){if(!window.supabase)throw Error('No se cargó la biblioteca Supabase. Abre la app con internet después de instalarla.');const key=$('key').value.trim()||localStorage.getItem(keyKey)||'';if(!key){configureKeyUI();throw Error('Configura la clave pública de Supabase una sola vez en este dispositivo.');}db=window.supabase.createClient(SUPABASE_URL,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}})}
+function initClient(){if(!window.supabase)throw Error('No se cargó la biblioteca Supabase. Abre la app con internet después de instalarla.');const key=DEFAULT_PUBLISHABLE_KEY;if(!key){configureKeyUI();throw Error('Configura la clave pública de Supabase una sola vez en este dispositivo.');}db=window.supabase.createClient(SUPABASE_URL,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}})}
 function setIdentity(u,p){user=u;profile=p;selected=null;catalogs=null;t($('userName'),p.nombre+' · '+p.rol);t($('cuenta'),p.nombre);$('login').classList.add('hidden');$('app').classList.remove('hidden');$('nav').classList.remove('hidden');$('date').value=day();$('closeDate').value=day();for(const id of ['date','closeDate']){$(id).min=daysAgo(7);$(id).max=day()}const canCapture=['supervisor','administrador','preempaque'].includes(p.rol);$('navCapture').classList.toggle('hidden',!canCapture);$('navRecords').classList.toggle('hidden',!canCapture);$('navClose').classList.toggle('hidden',!canCapture);$('navPrepack').classList.toggle('hidden',!['preempaque','administrador'].includes(p.rol));$('navUsers').classList.toggle('hidden',p.rol!=='administrador');if(canCapture){renderCatalogs();restoreBatch();tab(p.rol==='preempaque'?'prepack':'capture')}else tab('prepack')}
 async function login(){if(!online()){status('loginMsg','Debes tener internet para iniciar sesión.','bad');return}$('loginBtn').disabled=true;try{initClient();const {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('pass').value});if(error)throw error;const r=await db.from('perfiles').select('nombre,rol,activo').eq('id',data.user.id).single();if(r.error)throw r.error;if(!r.data?.activo||r.data.rol!=='administrador')throw Error('Esta pantalla es exclusiva para administradores.');localStorage.setItem(keyKey,$('key').value.trim()||localStorage.getItem(keyKey)||'');$('pass').value='';setIdentity(data.user,r.data);await fetchCatalogs();}catch(e){status('loginMsg',err(e),'bad');if(db)try{await db.auth.signOut()}catch{}}finally{$('loginBtn').disabled=false}}
-function configureKeyUI(){const k=localStorage.getItem(keyKey);if(k){$('key').value=k;$('configKey').classList.add('hidden');$('changeKey').classList.remove('hidden')}else{$('configKey').classList.remove('hidden');$('changeKey').classList.add('hidden')}}
+function configureKeyUI(){$('key').value=DEFAULT_PUBLISHABLE_KEY;$('configKey').classList.add('hidden');$('changeKey').classList.add('hidden')}
 async function restore(){
   configureKeyUI();
-  const savedKey=localStorage.getItem(keyKey)||'';
+  const savedKey=DEFAULT_PUBLISHABLE_KEY;
   if(!savedKey)return;
   try{
     initClient();
@@ -201,7 +202,7 @@ async function loadPinUsers(){
 async function pinRequest(payload){
   if(!PIN_ACCESS_ENABLED)throw Error('El acceso PIN todavía no está habilitado.');
   initClient();
-  const publicKey=$('key').value.trim()||localStorage.getItem(keyKey);
+  const publicKey=DEFAULT_PUBLISHABLE_KEY;
   const response=await fetch(SUPABASE_URL+'/functions/v1/acceso-pin',{method:'POST',headers:{'Content-Type':'application/json','apikey':publicKey},body:JSON.stringify(payload),cache:'no-store'});
   const out=await response.json().catch(()=>({}));
   if(!response.ok||out.error)throw Error(out.error||'Error de acceso');
@@ -254,7 +255,7 @@ document.addEventListener('keydown',e=>{
 });
 pinRender();
 $('changeKey').addEventListener('click',()=>{$('configKey').classList.remove('hidden');$('changeKey').classList.add('hidden');$('key').focus()});
-async function start(){setLoginMode(new URLSearchParams(location.search).get('admin')==='1'?'password':'pin');refreshConnection();$('key').value=localStorage.getItem(keyKey)||'';try{await restore()}finally{$('boot').classList.add('hidden');if(!user)$('login').classList.remove('hidden')}window.addEventListener('online',refreshConnection);window.addEventListener('offline',refreshConnection)}
+async function start(){setLoginMode(new URLSearchParams(location.search).get('admin')==='1'?'password':'pin');refreshConnection();$('key').value=DEFAULT_PUBLISHABLE_KEY;try{await restore()}finally{$('boot').classList.add('hidden');if(!user)$('login').classList.remove('hidden')}window.addEventListener('online',refreshConnection);window.addEventListener('offline',refreshConnection)}
 
 
 function updateCaptureSummary(){const crop=origenActual().nombre||'Pendiente';const motive=catalogs?.reasons.find(x=>String(x.id)===$('reason').value);t($('sCrop'),crop);t($('sDate'),$('date').value||'Pendiente');t($('sMat'),selected?.codigo||'Pendiente');t($('sQty'),$('qty').value&&selected?$('qty').value+' '+selected.unidad:'Pendiente');t($('sReason'),motive?.descripcion||'Pendiente');t($('reasonInfo'),motive?(motive.justificada?'● Justificada':'● No justificada'):'Clasificación pendiente')}
