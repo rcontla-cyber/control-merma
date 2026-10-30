@@ -23,11 +23,30 @@
 #updateNotice p{font-size:12px;line-height:1.5;margin:5px 0 11px;color:#d3e2ec}
 #updateNotice .updateActions{display:flex;gap:8px;flex-wrap:wrap}
 #updateNotice button{flex:1;min-width:130px}
+
+/* Acceso PIN · interfaz preparada; activación depende de verificación de servidor */
+.auth-switch{display:flex;gap:5px;padding:5px;border:1px solid var(--border);background:#101c2a;border-radius:13px;margin:18px 0}
+.auth-switch button{flex:1;border:0;background:transparent;color:var(--muted);min-height:42px}
+.auth-switch button.active{background:#284557;color:#dff8ff;box-shadow:0 1px 7px #0005}
+.pin-box{max-width:300px;margin:16px auto 4px;text-align:center}.pin-box label{text-align:left}.pin-box select{font-weight:650;margin-bottom:23px}
+.pin-instruction{color:var(--muted);font-size:12px;margin:8px 0 17px}
+.pin-dots{display:flex;justify-content:center;gap:11px;margin:20px 0 23px}
+.pin-dots span{width:13px;height:13px;border:1.5px solid #5a7b94;border-radius:100%;background:#1c2c3b;transition:background .12s,transform .12s}
+.pin-dots span.filled{background:var(--accent);border-color:var(--accent);transform:scale(1.06)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:278px;margin:0 auto}
+.pin-pad button{font-size:23px;font-weight:550;min-height:61px;border-radius:15px;background:#213549;border-color:#385369;touch-action:manipulation}
+.pin-pad button:active{background:#31546a;transform:scale(.96)}
+.pin-pad button.utility{font-size:12px;background:#172838;color:#c0d5e4}
+.pin-pad button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.pin-phase{font-size:12px;color:var(--accent);letter-spacing:.5px}
+.pin-alert{color:#f2ce86;font-size:12px;line-height:1.5;margin:12px 0 0}
+@media(max-width:420px){.pin-pad button{min-height:57px}}
 </style></head><body>
 <header><h1>▣ CONTROL DE MERMA</h1></header>
 <main><div class="card row"><strong id="conectividad">Comprobando conexión</strong><span id="cuenta" class="pill">Sin sesión</span></div>
 <section id="boot" class="card" role="status" aria-live="polite"><span class="boot-spinner" aria-hidden="true"></span><div><strong>CONTROL DE MERMA</strong></div><p class="small">Preparando tu sesión…</p></section>
-<section id="login" class="card hidden"><h2>Iniciar sesión</h2><p class="sectionTitle">Supervisor · Preempaque · Administrador</p><div id="configKey" class="hidden"><label>Configuración inicial · clave pública Supabase</label><input id="key" placeholder="sb_publishable_..." autocomplete="off"><p class="small">Solo se configura una vez por navegador. Usa exclusivamente la clave pública (publishable/anon), nunca service_role ni secret.</p></div><button id="changeKey" type="button" class="config-link hidden" style="font-size:12px;min-height:28px;padding:4px 0;border:0;background:transparent;color:var(--muted)">Cambiar configuración de Supabase</button><label>Correo electrónico</label><input id="email" type="email" autocomplete="username"><label>Contraseña</label><input id="pass" type="password" autocomplete="current-password"><button class="primary full" id="loginBtn">Ingresar</button><div id="loginMsg" class="status">Inicia sesión con conexión a internet.</div></section>
+<section id="login" class="card hidden"><h2>Iniciar sesión</h2><p class="sectionTitle">Supervisor · Preempaque · Administrador</p><div id="configKey" class="hidden"><label>Configuración inicial · clave pública Supabase</label><input id="key" placeholder="sb_publishable_..." autocomplete="off"><p class="small">Solo se configura una vez por navegador. Usa exclusivamente la clave pública (publishable/anon), nunca service_role ni secret.</p></div><button id="changeKey" type="button" class="config-link hidden" style="font-size:12px;min-height:28px;padding:4px 0;border:0;background:transparent;color:var(--muted)">Cambiar configuración de Supabase</button><div id="passwordPanel" class="hidden"><label for="email">Correo del administrador</label><input id="email" type="email" autocomplete="username" inputmode="email"><label for="pass">Contraseña</label><input id="pass" type="password" autocomplete="current-password"><button class="primary full" id="loginBtn">Ingresar</button></div>
+<div id="pinPanel"><div class="pin-box"><label for="pinUser">Selecciona tu usuario</label><select id="pinUser" aria-label="Supervisor o personal autorizado"><option value="">Selecciona tu nombre</option></select><div class="pin-phase" id="pinPhase">ACCESO DE PERSONAL</div><p class="pin-instruction" id="pinInstruction">Ingresa tu PIN de seis dígitos</p><div class="pin-dots" id="pinDots" role="status" aria-label="0 de 6 dígitos"><span></span><span></span><span></span><span></span><span></span><span></span></div><div class="pin-pad" id="pinPad" aria-label="Teclado numérico"></div><button type="button" class="primary full" id="pinSubmit" disabled>Ingresar con PIN</button><p class="pin-alert" id="pinSecurityNotice">Solicita tu PIN temporal al administrador.</p></div></div><div id="loginMsg" class="status">Inicia sesión con conexión a internet.</div></section>
 <section id="app" class="hidden"><div class="card row"><div><strong id="userName"></strong><div class="small">Acceso según rol de usuario</div></div><button id="logoutBtn">Salir</button></div>
 <section id="capture"><h2>Nueva captura</h2><p class="sectionTitle">Registro de merma de materiales de empaque</p><div class="formgrid"><div><div class="card"><h3>01 · Datos de jornada</h3><div class="grid"><div><label>Origen de merma</label><select id="originType"><option value="cultivo">Cultivo</option><option value="area">Área</option></select></div><div id="cropWrap"><label>Cultivo</label><select id="crop"></select></div><div id="areaWrap" class="hidden"><label>Área</label><select id="area"></select></div><div><label>Fecha de merma</label><input id="date" type="date"></div></div><p class="small">Se permiten hasta siete días retroactivos.</p></div><div class="card"><h3>02 · Selección de material</h3><div id="catalogState" class="status warn">Cargando catálogos...</div><label>Buscar material</label><input id="search" placeholder="Código o nombre, mínimo 2 letras" autocomplete="off"><div id="matches" class="results"></div><div id="selected" class="status">Selecciona un material de la lista.</div></div></div><div><div class="card"><h3>03 · Detalle de merma</h3><label>Cantidad</label><input id="qty" type="number" inputmode="numeric" min="1" step="1" placeholder="0"><label>Motivo de merma</label><select id="reason"></select><div id="reasonInfo" class="status">Clasificación pendiente</div></div><div class="card"><h3>04 · Añadir artículos</h3><p class="small">El origen seleccionado y la fecha se aplican a los nuevos artículos. Cada artículo conserva su material, cantidad y motivo.</p><button id="addItem" type="button" class="primary full">＋ Añadir artículo a la captura</button><div id="batchItems" class="batch-list"></div><div id="batchMsg" class="status">Agrega uno o varios materiales antes de guardar.</div><button id="clearSaved" type="button" class="full">Limpiar artículos ya guardados</button></div><div class="card"><h3>05 · Confirmar captura</h3><div class="summary"><div class="row"><span>Origen</span><strong id="sCrop">Pendiente</strong></div><div class="row"><span>Fecha</span><strong id="sDate">Pendiente</strong></div><div class="row"><span>Material</span><strong id="sMat">Pendiente</strong></div><div class="row"><span>Cantidad</span><strong id="sQty">Pendiente</strong></div><div class="row"><span>Motivo</span><strong id="sReason">Pendiente</strong></div></div><div class="status warn" id="batchTotal">0 artículos por guardar</div><button id="saveBtn" class="primary full" disabled>Guardar artículos en Supabase</button><div id="saveMsg" class="status">Completa los campos. El guardado requiere internet.</div></div></div></div></section>
 <section id="records" class="card hidden"><h2>Mis registros</h2><p class="sectionTitle">Movimientos capturados por tu cuenta</p><button id="refreshRecords">Actualizar registros</button><div id="recordsList" class="status">Consulta en línea</div></section>
@@ -72,7 +91,7 @@ const forUser=async()=>user?(await getAll()).filter(x=>x.userId===user.id):[];
 function refreshConnection(){t($('conectividad'),online()?'● Conexión disponible':'● Sin conexión');$('conectividad').style.color=online()?'#187359':'#a16311'}
 function initClient(){if(!window.supabase)throw Error('No se cargó la biblioteca Supabase. Abre la app con internet después de instalarla.');const key=$('key').value.trim()||localStorage.getItem(keyKey)||'';if(!key){configureKeyUI();throw Error('Configura la clave pública de Supabase una sola vez en este dispositivo.');}db=window.supabase.createClient(SUPABASE_URL,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}})}
 function setIdentity(u,p){user=u;profile=p;selected=null;catalogs=null;t($('userName'),p.nombre+' · '+p.rol);t($('cuenta'),p.nombre);$('login').classList.add('hidden');$('app').classList.remove('hidden');$('nav').classList.remove('hidden');$('date').value=day();$('closeDate').value=day();for(const id of ['date','closeDate']){$(id).min=daysAgo(7);$(id).max=day()}const canCapture=['supervisor','administrador','preempaque'].includes(p.rol);$('navCapture').classList.toggle('hidden',!canCapture);$('navRecords').classList.toggle('hidden',!canCapture);$('navClose').classList.toggle('hidden',!canCapture);$('navPrepack').classList.toggle('hidden',!['preempaque','administrador'].includes(p.rol));$('navUsers').classList.toggle('hidden',p.rol!=='administrador');if(canCapture){renderCatalogs();restoreBatch();tab(p.rol==='preempaque'?'prepack':'capture')}else tab('prepack')}
-async function login(){if(!online()){status('loginMsg','Debes tener internet para iniciar sesión.','bad');return}$('loginBtn').disabled=true;try{initClient();const {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('pass').value});if(error)throw error;const r=await db.from('perfiles').select('nombre,rol,activo').eq('id',data.user.id).single();if(r.error)throw r.error;if(!r.data?.activo||!['supervisor','administrador','preempaque'].includes(r.data.rol))throw Error('Cuenta no autorizada o desactivada');localStorage.setItem(keyKey,$('key').value.trim()||localStorage.getItem(keyKey)||'');$('pass').value='';setIdentity(data.user,r.data);await fetchCatalogs();}catch(e){status('loginMsg',err(e),'bad');if(db)try{await db.auth.signOut()}catch{}}finally{$('loginBtn').disabled=false}}
+async function login(){if(!online()){status('loginMsg','Debes tener internet para iniciar sesión.','bad');return}$('loginBtn').disabled=true;try{initClient();const {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('pass').value});if(error)throw error;const r=await db.from('perfiles').select('nombre,rol,activo').eq('id',data.user.id).single();if(r.error)throw r.error;if(!r.data?.activo||r.data.rol!=='administrador')throw Error('Esta pantalla es exclusiva para administradores.');localStorage.setItem(keyKey,$('key').value.trim()||localStorage.getItem(keyKey)||'');$('pass').value='';setIdentity(data.user,r.data);await fetchCatalogs();}catch(e){status('loginMsg',err(e),'bad');if(db)try{await db.auth.signOut()}catch{}}finally{$('loginBtn').disabled=false}}
 function configureKeyUI(){const k=localStorage.getItem(keyKey);if(k){$('key').value=k;$('configKey').classList.add('hidden');$('changeKey').classList.remove('hidden')}else{$('configKey').classList.remove('hidden');$('changeKey').classList.add('hidden')}}
 async function restore(){
   configureKeyUI();
@@ -133,8 +152,109 @@ async function checkClose(){invalidateClose();if(batchItems.some(x=>x.status!=='
 async function confirmClose(){if(batchItems.some(x=>x.status!=='synced'&&x.fecha_merma===$('closeDate').value)){invalidateClose();status('closeMsg','Antes de cerrar debes resolver los artículos pendientes de la fecha.','bad');return}if(!closingDate||closingDate!==$('closeDate').value||!closingCount)return;const d=closingDate;invalidateClose();if(!confirm('¿Confirmar cierre de '+d+'? Este cierre será REAL en Supabase.'))return;try{await ensureRealSession();const r=await db.rpc('confirmar_cierre_diario',{p_fecha_merma:d});if(r.error)throw r.error;status('closeMsg','CIERRE CONFIRMADO · ID '+r.data,'good')}catch(e){status('closeMsg','Resultado no confirmado: '+err(e)+'. Consulta la fecha antes de repetir.','bad')}}
 function tab(name){const canCapture=['supervisor','administrador','preempaque'].includes(profile?.rol);const canReport=['preempaque','administrador'].includes(profile?.rol);if((name==='users'&&profile?.rol!=='administrador')||(name==='prepack'&&!canReport)||(!['prepack','users'].includes(name)&&!canCapture))return;view=name;for(const id of ['capture','records','close','prepack','users'])$(id).classList.toggle('hidden',id!==name);document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));if(name==='records')loadRecords();if(name==='close')checkClose();if(name==='prepack')refreshPrepack();if(name==='users'){loadUsers();cargarCatalogosAdmin()}}
 async function logout(){try{if(db)await db.auth.signOut({scope:'local'})}catch{}user=null;profile=null;db=null;location.reload()}
+// PIN preparado en la interfaz. No activar hasta auditar límites y sesiones del servidor.
+const PIN_ACCESS_ENABLED=true; // Activar solo al publicar backend v5 y con JWT desactivado para acceso público.
+let pinMode='pin',pinDigits='',pinChangeTicket=null,pinChangeUserId=null,pinOld='',pinNew='';
+function pinMessage(msg,mode='warn'){status('loginMsg',msg,mode)}
+function pinRender(){
+  const count=Math.min(6,pinDigits.length);
+  $('pinDots').setAttribute('aria-label',count+' de 6 dígitos');
+  [...$('pinDots').children].forEach((dot,i)=>dot.classList.toggle('filled',i<count));
+  $('pinSubmit').disabled=!PIN_ACCESS_ENABLED||!$('pinUser').value||count!==6;
+  $('pinSubmit').textContent=pinMode==='pin'?'Ingresar con PIN':pinMode==='old'?'Verificar PIN temporal':pinMode==='new'?'Continuar':'Guardar nuevo PIN';
+  $('pinPhase').textContent=pinMode==='pin'?'ACCESO DE PERSONAL':pinMode==='old'?'CAMBIO OBLIGATORIO · 1/3':pinMode==='new'?'CAMBIO OBLIGATORIO · 2/3':'CAMBIO OBLIGATORIO · 3/3';
+  $('pinInstruction').textContent=pinMode==='pin'?'Escribe tu PIN personal de seis dígitos':pinMode==='old'?'Confirma tu PIN temporal':pinMode==='new'?'Elige un nuevo PIN de seis dígitos':'Repite el PIN nuevo';
+}
+function pinInput(key){
+  if(key==='erase')pinDigits=pinDigits.slice(0,-1);
+  else if(key==='clear')pinDigits='';
+  else if(/^\d$/.test(key)&&pinDigits.length<6)pinDigits+=key;
+  pinRender();
+}
+function setLoginMode(mode){
+  const adminAccess=mode==='password';
+  $('passwordPanel').classList.toggle('hidden',!adminAccess);
+  $('pinPanel').classList.toggle('hidden',adminAccess);
+  pinMode=adminAccess?'password':'pin';pinDigits='';pinChangeTicket=null;pinOld='';pinNew='';pinRender();
+  $('login').querySelector('h2').textContent=adminAccess?'Acceso de administrador':'Acceso con PIN';
+  $('login').querySelector('.sectionTitle').textContent=adminAccess?'Administración · Recuperación de cuenta':'Supervisor · Preempaque';
+  if(!adminAccess){pinMessage('Selecciona tu nombre y escribe tu PIN.','');loadPinUsers()}
+  else pinMessage('Ingresa con tu cuenta de administrador.');
+}
+// La lista de nombres debe provenir de un endpoint de acceso diseñado para esta finalidad.
+// No se consultan perfiles privados sin sesión ni se incrustan nombres reales en el HTML.
+function populatePinUsers(users){
+  const select=$('pinUser');select.replaceChildren();opt(select,'','Selecciona tu nombre');
+  for(const x of users||[]){if(x&&/^[0-9a-f-]{36}$/i.test(x.id)&&typeof x.nombre==='string')opt(select,x.id,x.nombre)}
+  pinRender();
+}
+async function loadPinUsers(){
+  const s=$('pinUser');s.disabled=true;
+  try{
+    const result=await pinRequest({action:'list_users'});
+    populatePinUsers(result.users);
+    $('pinSecurityNotice').textContent='¿No apareces? Solicita al administrador que active tu cuenta y genere tu PIN.';
+    if(!result.users?.length)pinMessage('No hay usuarios activos disponibles.','warn');
+  }catch(e){pinMessage('No se pudo cargar el personal: '+err(e),'bad')}
+  finally{s.disabled=false}
+}
+async function pinRequest(payload){
+  if(!PIN_ACCESS_ENABLED)throw Error('El acceso PIN todavía no está habilitado.');
+  initClient();
+  const publicKey=$('key').value.trim()||localStorage.getItem(keyKey);
+  const response=await fetch(SUPABASE_URL+'/functions/v1/acceso-pin',{method:'POST',headers:{'Content-Type':'application/json','apikey':publicKey},body:JSON.stringify(payload),cache:'no-store'});
+  const out=await response.json().catch(()=>({}));
+  if(!response.ok||out.error)throw Error(out.error||'Error de acceso');
+  return out;
+}
+async function pinSubmit(){
+  if(!PIN_ACCESS_ENABLED){pinMessage('PIN no habilitado todavía.','warn');return}
+  if(pinDigits.length!==6)return;
+  const userId=$('pinUser').value;
+  if(!/^[0-9a-f-]{36}$/i.test(userId)){pinMessage('Selecciona tu usuario.','bad');return}
+  $('pinSubmit').disabled=true;
+  try{
+    let result;
+    if(pinMode==='pin'){
+      result=await pinRequest({action:'login',user_id:userId,pin:pinDigits});
+      if(result.must_change){pinChangeTicket=result.change_ticket;pinChangeUserId=result.user_id;pinMode='old';pinDigits='';pinRender();pinMessage('Por seguridad debes cambiar tu PIN temporal.','warn');return}
+    }else if(pinMode==='old'){pinOld=pinDigits;pinDigits='';pinMode='new';pinRender();return}
+    else if(pinMode==='new'){
+      if(pinDigits===pinOld)throw Error('Tu nuevo PIN debe ser distinto del temporal.');
+      pinNew=pinDigits;pinDigits='';pinMode='confirm';pinRender();return;
+    }else{
+      if(pinDigits!==pinNew){pinDigits='';pinMode='new';pinRender();throw Error('Los PIN nuevos no coinciden. Inténtalo de nuevo.')}
+      result=await pinRequest({action:'change',change_ticket:pinChangeTicket,user_id:pinChangeUserId,current_pin:pinOld,new_pin:pinNew});
+    }
+    if(!result?.session?.access_token||!result?.session?.refresh_token)throw Error('No se recibió sesión válida.');
+    const {data:session,error:sessionError}=await db.auth.setSession({access_token:result.session.access_token,refresh_token:result.session.refresh_token});
+    if(sessionError||!session?.user||session.user.id!==userId)throw sessionError||Error('La identidad recibida no coincide con el usuario elegido.');
+    const r=await db.from('perfiles').select('nombre,rol,activo').eq('id',session.user.id).single();
+    if(r.error||!r.data?.activo||r.data.rol==='administrador')throw Error('Cuenta no autorizada para acceder con PIN.');
+    localStorage.setItem(keyKey,$('key').value.trim()||localStorage.getItem(keyKey)||'');
+    pinDigits='';pinOld='';pinNew='';pinChangeTicket=null;pinChangeUserId=null;
+    setIdentity(session.user,r.data);await fetchCatalogs();
+  }catch(e){pinMessage(err(e),'bad');if(pinMode==='pin'&&db)try{await db.auth.signOut({scope:'local'})}catch{}}
+  finally{pinRender()}
+}
+for(const n of ['1','2','3','4','5','6','7','8','9','clear','0','erase']){
+  const b=document.createElement('button');b.type='button';b.className=['erase','clear'].includes(n)?'utility':'';
+  b.textContent=n==='erase'?'⌫':n==='clear'?'Borrar':n;b.setAttribute('aria-label',n==='erase'?'Borrar último dígito':n==='clear'?'Limpiar PIN':n);
+  b.onclick=()=>pinInput(n);$('pinPad').append(b);
+}
+
+$('pinSubmit').onclick=pinSubmit;
+$('pinUser').addEventListener('change',()=>{pinDigits='';pinRender()});
+document.addEventListener('keydown',e=>{
+  if(!$('login').classList.contains('hidden')&&pinMode!=='password'&&document.activeElement?.id!=='pinUser'&&document.activeElement?.id!=='email'&&document.activeElement?.id!=='pass'&&document.activeElement?.id!=='key'){
+    if(/^\d$/.test(e.key)){e.preventDefault();pinInput(e.key)}
+    else if(e.key==='Backspace'){e.preventDefault();pinInput('erase')}
+    else if(e.key==='Enter'&&pinDigits.length===6){e.preventDefault();pinSubmit()}
+  }
+});
+pinRender();
 $('changeKey').addEventListener('click',()=>{$('configKey').classList.remove('hidden');$('changeKey').classList.add('hidden');$('key').focus()});
-async function start(){refreshConnection();$('key').value=localStorage.getItem(keyKey)||'';try{await restore()}finally{$('boot').classList.add('hidden');if(!user)$('login').classList.remove('hidden')}window.addEventListener('online',refreshConnection);window.addEventListener('offline',refreshConnection)}
+async function start(){setLoginMode(new URLSearchParams(location.search).get('admin')==='1'?'password':'pin');refreshConnection();$('key').value=localStorage.getItem(keyKey)||'';try{await restore()}finally{$('boot').classList.add('hidden');if(!user)$('login').classList.remove('hidden')}window.addEventListener('online',refreshConnection);window.addEventListener('offline',refreshConnection)}
 
 
 function updateCaptureSummary(){const crop=origenActual().nombre||'Pendiente';const motive=catalogs?.reasons.find(x=>String(x.id)===$('reason').value);t($('sCrop'),crop);t($('sDate'),$('date').value||'Pendiente');t($('sMat'),selected?.codigo||'Pendiente');t($('sQty'),$('qty').value&&selected?$('qty').value+' '+selected.unidad:'Pendiente');t($('sReason'),motive?.descripcion||'Pendiente');t($('reasonInfo'),motive?(motive.justificada?'● Justificada':'● No justificada'):'Clasificación pendiente')}
@@ -194,10 +314,26 @@ function renderUsers(){
   if(u.id!==user.id){
    const toggle=document.createElement('button');toggle.textContent=u.activo?'Desactivar':'Reactivar';
    toggle.onclick=()=>toggleUser(u.id,!u.activo);actions.append(toggle);
+    if(u.rol!=='administrador'){const resetPin=document.createElement('button');resetPin.textContent='Generar PIN temporal';resetPin.onclick=()=>resetUserPin(u);actions.append(resetPin)}
   }
   card.append(actions);box.append(card);
  }
  const count=document.createElement('p');count.className='users-summary';count.textContent=usuariosCache.length+' cuentas listadas';box.prepend(count);
+}
+async function resetUserPin(u){
+  if(profile?.rol!=='administrador'||u.rol==='administrador')return;
+  const reason=prompt('Motivo para generar PIN temporal de '+u.nombre+':','Alta o recuperación de acceso');
+  if(reason===null)return;
+  if(reason.trim().length<5){alert('Escribe un motivo de al menos 5 caracteres.');return}
+  if(!confirm('¿Generar un PIN temporal para '+u.nombre+'? Se invalidará su PIN anterior.'))return;
+  try{
+    await ensureRealSession();
+    const {data,error}=await db.functions.invoke('acceso-pin',{body:{action:'reset',user_id:u.id,reason:reason.trim()}});
+    if(error){let msg=error.message;try{const x=await error.context.json();msg=x.error||msg}catch{}throw Error(msg)}
+    if(!data?.temporary_pin)throw Error(data?.error||'No fue posible generar el PIN');
+    // El PIN solo se muestra al administrador una vez; no se persiste en el navegador.
+    alert('PIN TEMPORAL DE '+u.nombre+'\n\n'+data.temporary_pin+'\n\nEntrégalo de manera privada. El supervisor tendrá que cambiarlo al entrar.');
+  }catch(e){alert('Error al generar PIN: '+err(e))}
 }
 async function createUser(){
  if(usuariosBusy)return;
